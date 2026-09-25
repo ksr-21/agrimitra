@@ -83,8 +83,7 @@ export default function Signup() {
             <div style={{ display: 'flex', gap: '8px' }}>
               {[
                 { val: 'FARMER', icon: '👨‍🌾', label: t('auth.farmer') },
-                { val: 'BUYER', icon: '🛒', label: t('auth.buyer') },
-                { val: 'DELIVERY', icon: '🚛', label: t('auth.delivery') },
+                { val: 'BUYER', icon: '🛒', label: t('auth.buyer') }
               ].map(r => (
                 <button
                   key={r.val}
