@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../api/client';
 
 export default function Signup() {
   const { t } = useTranslation();
@@ -16,7 +15,7 @@ export default function Signup() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -25,23 +24,30 @@ export default function Signup() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const res = await apiClient.post('/auth/signup', { phone, password, role, fullName });
-      login(res.data.token, res.data.user);
-      
-      // Redirect based on role
-      switch (res.data.user.role) {
+    setIsLoading(true);
+
+    // Store user in a local registry so login can look them up later
+    const allUsers: Record<string, any> = JSON.parse(
+      localStorage.getItem('agrimitra-users') || '{}'
+    );
+
+    const userId = `user-${Date.now()}`;
+    allUsers[phone] = { id: userId, phone, password, role, fullName };
+    localStorage.setItem('agrimitra-users', JSON.stringify(allUsers));
+
+    const user = { id: userId, phone, role, profile: { fullName } };
+    const token = `local-token-${userId}-${Date.now()}`;
+
+    setTimeout(() => {
+      login(token, user);
+      setIsLoading(false);
+      switch (role) {
         case 'FARMER': navigate('/farmer'); break;
         case 'BUYER': navigate('/buyer'); break;
         case 'DELIVERY': navigate('/delivery'); break;
         default: navigate('/');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || t('common.error'));
-    } finally {
-      setIsLoading(false);
-    }
+    }, 400); // small delay for UX feel
   };
 
   return (

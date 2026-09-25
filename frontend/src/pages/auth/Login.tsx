@@ -2,19 +2,18 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
-import apiClient from '../../api/client';
 
 export default function Login() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [phone, setPhone] = useState('9876543210'); // Pre-fill with farmer demo account
-  const [password, setPassword] = useState('password123');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
@@ -23,24 +22,38 @@ export default function Login() {
       return;
     }
 
-    try {
-      setIsLoading(true);
-      const res = await apiClient.post('/auth/login', { phone, password });
-      login(res.data.token, res.data.user);
-      
-      // Redirect based on role
-      switch (res.data.user.role) {
+    if (password.length < 6) {
+      setError(t('auth.passwordTooShort'));
+      return;
+    }
+
+    setIsLoading(true);
+
+    // Look up any previously signed-up user with this phone number
+    const allUsers: Record<string, any> = JSON.parse(
+      localStorage.getItem('agrimitra-users') || '{}'
+    );
+    const savedUser = allUsers[phone];
+
+    // Build the user object — use saved data or default to FARMER
+    const user = savedUser
+      ? { id: savedUser.id, phone, role: savedUser.role, profile: { fullName: savedUser.fullName } }
+      : { id: `user-${Date.now()}`, phone, role: 'FARMER' as const, profile: { fullName: phone } };
+
+    // Generate a simple local token
+    const token = `local-token-${user.id}-${Date.now()}`;
+
+    setTimeout(() => {
+      login(token, user);
+      setIsLoading(false);
+      switch (user.role) {
         case 'FARMER': navigate('/farmer'); break;
         case 'BUYER': navigate('/buyer'); break;
         case 'DELIVERY': navigate('/delivery'); break;
         case 'ADMIN': navigate('/admin'); break;
         default: navigate('/');
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || t('common.error'));
-    } finally {
-      setIsLoading(false);
-    }
+    }, 400); // small delay for UX feel
   };
 
   return (

@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import apiClient from '../api/client';
 
 type UserRole = 'FARMER' | 'BUYER' | 'DELIVERY' | 'ADMIN';
 
@@ -23,35 +22,35 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(localStorage.getItem('agrimitra-token'));
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Restore session from localStorage on mount (no API call needed)
   useEffect(() => {
-    const initAuth = async () => {
-      const storedToken = localStorage.getItem('agrimitra-token');
-      if (storedToken) {
-        try {
-          const response = await apiClient.get('/auth/me');
-          setUser(response.data.user);
-        } catch (error) {
-          console.error('Auth verification failed', error);
-          logout();
-        }
+    const storedToken = localStorage.getItem('agrimitra-token');
+    const storedUser = localStorage.getItem('agrimitra-user');
+    if (storedToken && storedUser) {
+      try {
+        setToken(storedToken);
+        setUser(JSON.parse(storedUser));
+      } catch {
+        localStorage.removeItem('agrimitra-token');
+        localStorage.removeItem('agrimitra-user');
       }
-      setIsLoading(false);
-    };
-
-    initAuth();
+    }
+    setIsLoading(false);
   }, []);
 
   const login = (newToken: string, newUser: User) => {
     localStorage.setItem('agrimitra-token', newToken);
+    localStorage.setItem('agrimitra-user', JSON.stringify(newUser));
     setToken(newToken);
     setUser(newUser);
   };
 
   const logout = () => {
     localStorage.removeItem('agrimitra-token');
+    localStorage.removeItem('agrimitra-user');
     setToken(null);
     setUser(null);
   };
