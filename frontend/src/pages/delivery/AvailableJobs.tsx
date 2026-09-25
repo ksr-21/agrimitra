@@ -27,9 +27,8 @@ export default function AvailableJobs() {
   });
 
   if (isLoading) return <div style={{ padding: '24px' }}>Loading available jobs...</div>;
-  if (error) return <div style={{ color: 'red', padding: '16px' }}>Error loading jobs</div>;
 
-  const { availableOrders } = data;
+  const availableOrders = data?.availableOrders || [];
 
   return (
     <div style={{ paddingBottom: '24px' }}>

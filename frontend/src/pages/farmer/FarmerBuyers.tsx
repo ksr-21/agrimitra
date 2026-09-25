@@ -48,7 +48,6 @@ export default function FarmerBuyers() {
   });
 
   if (isReqsLoading || isBidsLoading) return <div style={{ padding: '24px' }}>{t('common.loading')}</div>;
-  if (reqsError || bidsError) return <div style={{ color: 'red', padding: '16px' }}>{t('common.error')}</div>;
 
   const requirements = requirementsData || [];
   const bids = bidsData || [];

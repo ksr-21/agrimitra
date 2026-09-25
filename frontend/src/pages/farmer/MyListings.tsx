@@ -61,11 +61,29 @@ export default function MyListings() {
     return <div style={{ padding: '24px' }}>{t('common.loading')}</div>;
   }
 
-  if (error) {
-    return <div style={{ color: 'red', padding: '16px' }}>{t('common.error')}</div>;
+  if (error || !data) {
+    return (
+      <div style={{ paddingBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: 700 }}>{t('farmer.myListings')}</h1>
+          <button
+            onClick={() => navigate('/farmer/new')}
+            style={{ background: 'var(--color-primary)', color: 'white', border: 'none', borderRadius: '24px', width: '44px', height: '44px', fontSize: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >+</button>
+        </div>
+        <div className="agri-card" style={{ textAlign: 'center', padding: '48px 24px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🌾</div>
+          <h2 style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>No listings yet</h2>
+          <p style={{ color: 'var(--color-text-muted)', marginBottom: '24px' }}>Start selling your produce to verified buyers.</p>
+          <button onClick={() => navigate('/farmer/new')} className="agri-btn agri-btn-primary">
+            {t('farmer.newListing')}
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  const listings = data.listings;
+  const listings = data?.listings || [];
 
   return (
     <div style={{ paddingBottom: '24px' }}>

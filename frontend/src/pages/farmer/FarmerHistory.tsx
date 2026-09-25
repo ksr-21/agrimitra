@@ -18,10 +18,6 @@ export default function FarmerHistory() {
     return <div style={{ padding: '24px' }}>{t('common.loading')}</div>;
   }
 
-  if (error) {
-    return <div style={{ color: 'red', padding: '16px' }}>{t('common.error')}</div>;
-  }
-
   const orders = data?.orders || [];
 
   return (
