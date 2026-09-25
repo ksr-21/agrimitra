@@ -26,7 +26,23 @@ export default function DeliveryDashboard() {
   });
 
   if (isLoading) return <div style={{ padding: '24px' }}>Loading jobs...</div>;
-  if (error) return <div style={{ color: 'red', padding: '16px' }}>Error loading jobs</div>;
+  if (error || !data) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="agri-card" style={{ background: '#D97706', color: 'white' }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>Find Available Jobs</h2>
+          <p style={{ opacity: 0.9, marginBottom: '16px' }}>Browse available delivery jobs in your area and start earning.</p>
+          <button className="agri-btn agri-btn-secondary" style={{ width: '100%' }} onClick={() => navigate('/delivery/available')}>
+            🚚 View Available Jobs
+          </button>
+        </div>
+        <div className="agri-card" style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '32px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🚚</div>
+          <p>No active deliveries right now.</p>
+        </div>
+      </div>
+    );
+  }
 
   const { activeOrders, profile } = data;
 

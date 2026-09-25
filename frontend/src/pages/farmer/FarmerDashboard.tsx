@@ -24,8 +24,22 @@ export default function FarmerDashboard() {
     );
   }
 
-  if (error) {
-    return <div style={{ color: 'red', padding: '16px' }}>{t('common.error')}</div>;
+  if (error || !data) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="agri-card" style={{ background: 'var(--color-primary)', color: 'white' }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>Ready to sell?</h2>
+          <p style={{ opacity: 0.9, marginBottom: '16px' }}>Upload a photo and let our AI analyze your crop for the best price.</p>
+          <button className="agri-btn agri-btn-secondary" style={{ width: '100%' }} onClick={() => navigate('/farmer/new')}>
+            📸 {t('farmer.newListing')}
+          </button>
+        </div>
+        <div className="agri-card" style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '32px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🌾</div>
+          <p>No listings yet. Tap above to get started!</p>
+        </div>
+      </div>
+    );
   }
 
   const { stats, profile, recentListings } = data;

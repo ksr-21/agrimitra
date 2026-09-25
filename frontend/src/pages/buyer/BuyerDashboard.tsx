@@ -24,8 +24,22 @@ export default function BuyerDashboard() {
     );
   }
 
-  if (error) {
-    return <div style={{ color: 'red', padding: '16px' }}>{t('common.error')}</div>;
+  if (error || !data) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="agri-card" style={{ background: 'var(--color-primary)', color: 'white' }}>
+          <h2 style={{ fontSize: '20px', marginBottom: '8px' }}>Looking for fresh produce?</h2>
+          <p style={{ opacity: 0.9, marginBottom: '16px' }}>Browse the market to find directly sourced produce from verified farmers.</p>
+          <button className="agri-btn agri-btn-secondary" style={{ width: '100%' }} onClick={() => navigate('/buyer/market')}>
+            🛒 Browse Market
+          </button>
+        </div>
+        <div className="agri-card" style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '32px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🛒</div>
+          <p>No bids placed yet. Browse the market to get started!</p>
+        </div>
+      </div>
+    );
   }
 
   const { stats, profile, recentBids } = data;
