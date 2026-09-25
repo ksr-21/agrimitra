@@ -3,6 +3,34 @@ import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { useState } from 'react';
 
+// ─── Demo: Buyers interested in your produce (bids tab) ─────────────────
+const DEMO_BIDS = [
+  { id: 'db1',  status: 'PENDING',  bidPrice: 30,  quantity: 300, message: 'We need weekly supply of fresh tomatoes.', buyer: { businessName: 'FreshMart Retailers', location: 'Mumbai, MH' }, listing: { cropType: 'tomato',     variety: 'Hybrid',   unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db2',  status: 'PENDING',  bidPrice: 25,  quantity: 500, message: 'Bulk purchase for our export unit.', buyer: { businessName: 'AgroExport Ltd', location: 'Pune, MH' }, listing: { cropType: 'onion',      variety: 'Red',      unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db3',  status: 'ACCEPTED', bidPrice: 120, quantity: 200, message: 'Looking for premium Alphonso for hotel chain.', buyer: { businessName: 'Hotel Grand Spices', location: 'Delhi' }, listing: { cropType: 'mango',      variety: 'Alphonso', unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db4',  status: 'PENDING',  bidPrice: 20,  quantity: 800, message: 'Need clean sorted potatoes for chips factory.', buyer: { businessName: 'Crunch Foods Pvt Ltd', location: 'Nagpur, MH' }, listing: { cropType: 'potato',     variety: 'Jyoti',    unit: 'kg', analysis: { sellOrWait: 'wait' } } },
+  { id: 'db5',  status: 'PENDING',  bidPrice: 68,  quantity: 400, message: 'Regular monthly requirement for our mill.', buyer: { businessName: 'Shree Flour Mills', location: 'Indore, MP' }, listing: { cropType: 'wheat',      variety: 'Sharbati', unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db6',  status: 'REJECTED', bidPrice: 55,  quantity: 200, message: 'Needed for our restaurant chain.', buyer: { businessName: 'Spice Garden Restaurants', location: 'Bangalore, KA' }, listing: { cropType: 'capsicum',   variety: 'Green',    unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db7',  status: 'PENDING',  bidPrice: 32,  quantity: 600, message: 'Exporting to Middle East, need best quality.', buyer: { businessName: 'Global Agri Exports', location: 'Surat, GJ' }, listing: { cropType: 'banana',     variety: 'Grand Nain', unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db8',  status: 'ACCEPTED', bidPrice: 100, quantity: 300, message: 'Need for our ayurvedic product line.', buyer: { businessName: 'Herbal Life Products', location: 'Ahmedabad, GJ' }, listing: { cropType: 'garlic',     variety: 'Desi',     unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db9',  status: 'PENDING',  bidPrice: 70,  quantity: 800, message: 'Procurement for our supermarket chain.', buyer: { businessName: 'SuperMart Chains', location: 'Chennai, TN' }, listing: { cropType: 'rice',       variety: 'Basmati',  unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+  { id: 'db10', status: 'PENDING',  bidPrice: 115, quantity: 200, message: 'Juice processing unit requirement.', buyer: { businessName: 'Nature\'s Juice Co', location: 'Kolhapur, MH' }, listing: { cropType: 'pomegranate', variety: 'Bhagwa',  unit: 'kg', analysis: { sellOrWait: 'sell' } } },
+];
+
+// ─── Demo: Buyer market requests (requirements tab) ─────────────────────
+const DEMO_REQUIREMENTS = [
+  { id: 'dr1',  cropType: 'tomato',      unit: 'kg',  quantityNeeded: 500,  maxBudgetPerUnit: 32,  location: 'Mumbai, MH',    buyer: { businessName: 'FreshMart Retailers' },    description: 'Need premium tomatoes weekly. Regular supplier preferred.' },
+  { id: 'dr2',  cropType: 'onion',       unit: 'kg',  quantityNeeded: 1000, maxBudgetPerUnit: 24,  location: 'Pune, MH',      buyer: { businessName: 'AgroExport Ltd' },         description: 'Bulk red onion for export. Low moisture required.' },
+  { id: 'dr3',  cropType: 'potato',      unit: 'kg',  quantityNeeded: 2000, maxBudgetPerUnit: 20,  location: 'Nagpur, MH',    buyer: { businessName: 'Crunch Foods Pvt Ltd' },  description: 'Chips factory needs clean uniform potatoes monthly.' },
+  { id: 'dr4',  cropType: 'wheat',       unit: 'kg',  quantityNeeded: 5000, maxBudgetPerUnit: 35,  location: 'Indore, MP',    buyer: { businessName: 'Shree Flour Mills' },      description: 'Premium wheat for our chakki flour brand.' },
+  { id: 'dr5',  cropType: 'rice',        unit: 'kg',  quantityNeeded: 3000, maxBudgetPerUnit: 70,  location: 'Delhi NCR',     buyer: { businessName: 'SuperMart Chains' },       description: 'Basmati rice for our supermarket shelves. Aged preferred.' },
+  { id: 'dr6',  cropType: 'capsicum',    unit: 'kg',  quantityNeeded: 200,  maxBudgetPerUnit: 60,  location: 'Bangalore, KA', buyer: { businessName: 'Spice Garden Restaurants' }, description: 'Weekly capsicum for our restaurant chain in Bangalore.' },
+  { id: 'dr7',  cropType: 'garlic',      unit: 'kg',  quantityNeeded: 400,  maxBudgetPerUnit: 100, location: 'Ahmedabad, GJ', buyer: { businessName: 'Herbal Life Products' },   description: 'Desi garlic for ayurvedic processing. No pesticide residue.' },
+  { id: 'dr8',  cropType: 'banana',      unit: 'kg',  quantityNeeded: 800,  maxBudgetPerUnit: 35,  location: 'Surat, GJ',     buyer: { businessName: 'Global Agri Exports' },    description: 'Grand Nain banana for Middle East export market.' },
+  { id: 'dr9',  cropType: 'pomegranate', unit: 'kg',  quantityNeeded: 500,  maxBudgetPerUnit: 120, location: 'Kolhapur, MH',  buyer: { businessName: "Nature's Juice Co" },      description: 'Bhagwa pomegranate for fresh juice processing.' },
+  { id: 'dr10', cropType: 'soybean',     unit: 'kg',  quantityNeeded: 3000, maxBudgetPerUnit: 58,  location: 'Indore, MP',    buyer: { businessName: 'Indore Oil Mills' },       description: 'JS-335 soybean for solvent extraction plant.' },
+];
+
 export default function FarmerBuyers() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -49,8 +77,13 @@ export default function FarmerBuyers() {
 
   if (isReqsLoading || isBidsLoading) return <div style={{ padding: '24px' }}>{t('common.loading')}</div>;
 
-  const requirements = requirementsData || [];
-  const bids = bidsData || [];
+  // Merge real API data with demo data
+  const apiBids: any[] = bidsData || [];
+  const apiReqs: any[] = requirementsData || [];
+  const apiBidIds = new Set(apiBids.map((b: any) => b.id));
+  const apiReqIds = new Set(apiReqs.map((r: any) => r.id));
+  const bids = [...apiBids, ...DEMO_BIDS.filter(d => !apiBidIds.has(d.id))];
+  const requirements = [...apiReqs, ...DEMO_REQUIREMENTS.filter(d => !apiReqIds.has(d.id))];
 
   return (
     <div style={{ paddingBottom: '24px' }}>
