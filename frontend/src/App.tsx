@@ -164,8 +164,7 @@ function LandingPage() {
       <div style={{ marginTop: '48px', display: 'flex', gap: '24px', flexWrap: 'wrap', justifyContent: 'center' }}>
         {[
           { icon: '👨‍🌾', label: t('auth.farmer') },
-          { icon: '🛒', label: t('auth.buyer') },
-          { icon: '🚛', label: t('auth.delivery') },
+          { icon: '🛒', label: t('auth.buyer') }
         ].map(role => (
           <div
             key={role.label}
