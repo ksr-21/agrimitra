@@ -24,7 +24,7 @@ export default function BuyerDashboard() {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !data.profile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="agri-card" style={{ background: 'var(--color-primary)', color: 'white' }}>
@@ -57,26 +57,26 @@ export default function BuyerDashboard() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '24px', fontWeight: 700 
         }}>
-          {profile.businessName.charAt(0)}
+          {(profile?.businessName || profile?.fullName || 'B').charAt(0)}
         </div>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: 'var(--color-primary-dark)' }}>
-            {profile.businessName}
+            {profile?.businessName || profile?.fullName || 'My Business'}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
             <span style={{ 
               fontSize: '12px', padding: '2px 8px', borderRadius: '12px', fontWeight: 600,
-              backgroundColor: profile.kycStatus === 'APPROVED' ? '#D1FAE5' : '#FEF3C7',
-              color: profile.kycStatus === 'APPROVED' ? '#065F46' : '#92400E'
+              backgroundColor: profile?.kycStatus === 'APPROVED' ? '#D1FAE5' : '#FEF3C7',
+              color: profile?.kycStatus === 'APPROVED' ? '#065F46' : '#92400E'
             }}>
-              {profile.kycStatus === 'APPROVED' ? t('buyer.kycApproved') : t('buyer.kycPending')}
+              {profile?.kycStatus === 'APPROVED' ? t('buyer.kycApproved') : t('buyer.kycPending')}
             </span>
           </div>
         </div>
       </div>
 
       {/* KYC Warning (if not approved) */}
-      {profile.kycStatus !== 'APPROVED' && (
+      {profile?.kycStatus !== 'APPROVED' && (
         <div style={{ padding: '16px', backgroundColor: '#FEF3C7', borderRadius: '8px', color: '#92400E', border: '1px solid #FDE68A' }}>
           <strong>Action Required:</strong> Please complete your KYC verification to start placing bids on produce.
           <br/>
@@ -89,11 +89,11 @@ export default function BuyerDashboard() {
       {/* Stats Cards */}
       <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', paddingBottom: '8px' }}>
         <div className="agri-card" style={{ flex: '1 0 140px', textAlign: 'center' }}>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--color-primary)' }}>{stats.activeBids}</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--color-primary)' }}>{stats?.activeBids ?? 0}</div>
           <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Active Bids</div>
         </div>
         <div className="agri-card" style={{ flex: '1 0 140px', textAlign: 'center' }}>
-          <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--color-accent)' }}>{stats.pendingOrders}</div>
+          <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--color-accent)' }}>{stats?.pendingOrders ?? 0}</div>
           <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Pending Orders</div>
         </div>
       </div>
@@ -120,13 +120,13 @@ export default function BuyerDashboard() {
           </Link>
         </div>
 
-        {recentBids.length === 0 ? (
+        {(recentBids || []).length === 0 ? (
           <div className="agri-card" style={{ textAlign: 'center', color: 'var(--color-text-muted)' }}>
             No bids placed yet.
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {recentBids.map((bid: any) => (
+            {(recentBids || []).map((bid: any) => (
               <div key={bid.id} className="agri-card" style={{ display: 'flex', gap: '16px', padding: '12px' }}>
                 <div style={{ 
                   width: '80px', height: '80px', 

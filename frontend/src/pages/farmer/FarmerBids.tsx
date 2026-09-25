@@ -37,7 +37,17 @@ export default function FarmerBids() {
   });
 
   if (isLoading) return <div style={{ padding: '24px' }}>Loading bids...</div>;
-  if (error) return <div style={{ color: 'red', padding: '16px' }}>Error loading bids</div>;
+
+  if (error || !data) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div className="agri-card" style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '32px' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>📋</div>
+          <p>No bids to review right now.</p>
+        </div>
+      </div>
+    );
+  }
 
   const pendingBids = data?.filter((b: any) => b.status === 'PENDING') || [];
   const otherBids = data?.filter((b: any) => b.status !== 'PENDING') || [];
@@ -58,8 +68,8 @@ export default function FarmerBids() {
             <div key={bid.id} className="agri-card" style={{ padding: '16px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                 <div>
-                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{bid.buyer.businessName}</h3>
-                  <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Location: {bid.buyer.location || 'Unknown'}</div>
+                  <h3 style={{ fontSize: '18px', fontWeight: 700, margin: 0 }}>{bid.buyer?.businessName || bid.buyer?.fullName || 'Unknown Buyer'}</h3>
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>Location: {bid.buyer?.location || 'Unknown'}</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--color-primary)' }}>₹{bid.bidPrice}/kg</div>
@@ -142,7 +152,7 @@ export default function FarmerBids() {
         {otherBids.map((bid: any) => (
           <div key={bid.id} className="agri-card" style={{ display: 'flex', justifyContent: 'space-between', opacity: 0.8 }}>
             <div>
-              <div style={{ fontWeight: 600 }}>{bid.buyer.businessName}</div>
+              <div style={{ fontWeight: 600 }}>{bid.buyer?.businessName || bid.buyer?.fullName || 'Unknown Buyer'}</div>
               <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>{bid.listing.cropType} • {bid.quantity}kg @ ₹{bid.bidPrice}</div>
             </div>
             <div style={{ 
