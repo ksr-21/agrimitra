@@ -1,0 +1,372 @@
+// Agrimitra — Prisma Schema
+// Farmer-Buyer Connect Platform
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users (single table, role-based) ───────────────────
+
+model User {
+  id                String    @id @default(uuid())
+  phone             String    @unique
+  email             String?   @unique
+  passwordHash      String
+  role              String    // "FARMER", "BUYER", "DELIVERY", "ADMIN"
+  preferredLanguage String    @default("en")
+  isVerified        Boolean   @default(false)
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  farmerProfile   FarmerProfile?
+  buyerProfile    BuyerProfile?
+  deliveryProfile DeliveryProfile?
+
+  reviewsGiven    Review[]       @relation("ReviewsGiven")
+  reviewsReceived Review[]       @relation("ReviewsReceived")
+  notifications   Notification[]
+  disputesRaised  Dispute[]      @relation("DisputesRaised")
+  trustEvents     TrustScoreEvent[]
+
+  @@map("users")
+}
+
+// ─── Farmer Profile ─────────────────────────────────────
+
+model FarmerProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  fullName        String
+  location        String?
+  district        String?
+  state           String?
+  pincode         String?
+  landSize        Float?        // in acres
+  landSizeUnit    String        @default("acres")
+  aadhaarVerified Boolean       @default(false)
+  // farmPhotos      String[]      // SQLite doesn't support String[]
+  farmPhotos      String        @default("[]") // JSON stringified array
+  trustScore      Float         @default(0)
+  totalTransactions Int         @default(0)
+  avgRating       Float         @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listings Listing[]
+  orders   Order[]
+  bids     Bid[]
+
+  @@map("farmer_profiles")
+}
+
+// ─── Buyer Profile ──────────────────────────────────────
+
+model BuyerProfile {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  businessName    String?
+  contactPerson   String
+  gstNumber       String?
+  kycStatus       String    @default("NOT_SUBMITTED") // "NOT_SUBMITTED", "PENDING", "APPROVED", "REJECTED"
+  // kycDocuments    String[]  // SQLite doesn't support String[]
+  kycDocuments    String    @default("[]") // JSON stringified array
+  kycReviewNotes  String?
+  kycReviewedAt   DateTime?
+  trustScore      Float     @default(0)
+  totalTransactions Int     @default(0)
+  avgRating       Float     @default(0)
+  location        String?
+  district        String?
+  state           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user         User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  requirements BuyerRequirement[]
+  bids         Bid[]
+  orders       Order[]
+
+  @@map("buyer_profiles")
+}
+
+// ─── Delivery Profile ───────────────────────────────────
+
+model DeliveryProfile {
+  id              String      @id @default(uuid())
+  userId          String      @unique
+  fullName        String
+  vehicleType     String      @default("MINI_TRUCK") // "BIKE", "AUTO", "MINI_TRUCK", "TRUCK"
+  vehicleNumber   String?
+  currentLocation String?
+  latitude        Float?
+  longitude       Float?
+  isAvailable     Boolean     @default(true)
+  totalDeliveries Int         @default(0)
+  avgRating       Float       @default(0)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("delivery_profiles")
+}
+
+// ─── Listings ───────────────────────────────────────────
+
+model Listing {
+  id                String        @id @default(uuid())
+  farmerId          String
+  cropType          String
+  variety           String?
+  quantity          Float
+  unit              String        @default("kg")
+  description       String?
+  aiRecommendedPrice Float?
+  finalPrice        Float?        // Farmer's chosen price per unit
+  status            String        @default("DRAFT") // "DRAFT", "ACTIVE", "MATCHED", "SOLD", "EXPIRED", "CANCELLED"
+  location          String?
+  district          String?
+  state             String?
+  deliveryAvailable Boolean       @default(true)
+  deliveryRadius    Float?        // km
+  harvestDate       DateTime?
+  expiresAt         DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  farmer   FarmerProfile    @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  images   ListingImage[]
+  analysis AiAnalysisResult?
+  bids     Bid[]
+  orders   Order[]
+
+  @@map("listings")
+}
+
+// ─── Listing Images ─────────────────────────────────────
+
+model ListingImage {
+  id        String   @id @default(uuid())
+  listingId String
+  imageUrl  String
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("listing_images")
+}
+
+// ─── AI Analysis Results ────────────────────────────────
+
+model AiAnalysisResult {
+  id               String       @id @default(uuid())
+  listingId        String       @unique
+  grade            String       // "A", "B", "C"
+  qualityScore     Float        // 1–5
+  confidence       Float        // 0–1
+  notes            String       // Plain-language explanation
+  priceMin         Float
+  priceMax         Float
+  recommendedPrice Float
+  currency         String       @default("INR")
+  sellOrWait       String       // 'sell' | 'wait'
+  sellOrWaitReason String
+  sellConfidence   Float        // 0–1
+  estimatedWaitDays Int?
+  grossRevenue     Float?
+  transportCost    Float?
+  platformFee      Float?
+  netProfit        Float?
+  createdAt        DateTime     @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("ai_analysis_results")
+}
+
+// ─── Buyer Requirements ─────────────────────────────────
+
+model BuyerRequirement {
+  id                String  @id @default(uuid())
+  buyerId           String
+  cropType          String
+  quantityNeeded    Float
+  unit              String  @default("kg")
+  maxBudgetPerUnit  Float?
+  qualityPreference String? // "A", "B", "any"
+  isRecurring       Boolean @default(false)
+  recurringInterval String? // "weekly", "monthly"
+  location          String?
+  district          String?
+  state             String?
+  isActive          Boolean @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  buyer BuyerProfile @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  bids  Bid[]
+
+  @@map("buyer_requirements")
+}
+
+// ─── Bids ───────────────────────────────────────────────
+
+model Bid {
+  id           String    @id @default(uuid())
+  buyerId      String
+  listingId    String?
+  requirementId String?
+  farmerId     String?   // Added to track which farmer placed the bid if bidding on a requirement
+  bidPrice     Float     // per unit
+  quantity     Float
+  message      String?
+  status       String    @default("PENDING") // "PENDING", "ACCEPTED", "REJECTED", "WITHDRAWN", "EXPIRED"
+  expiresAt    DateTime  // 3-day default expiry
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  buyer       BuyerProfile       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  listing     Listing?           @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  requirement BuyerRequirement?  @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+  farmer      FarmerProfile?     @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  order       Order?
+
+  @@map("bids")
+}
+
+// ─── Orders ─────────────────────────────────────────────
+
+model Order {
+  id                String      @id @default(uuid())
+  listingId         String
+  bidId             String?     @unique
+  buyerId           String
+  farmerId          String
+  deliveryPartnerId String?
+  totalAmount       Float
+  platformFee       Float       @default(0) // ₹0 for v1, tracked for future
+  transportCost     Float?
+  status            String      @default("CONFIRMED") // "CONFIRMED", "PICKUP_SCHEDULED", "PICKED_UP", "IN_TRANSIT", "DELIVERED", "COMPLETED", "DISPUTED", "CANCELLED"
+  cancelledBy       String?     // userId of who cancelled
+  cancelReason      String?     // why it was cancelled
+  completedAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  listing         Listing              @relation(fields: [listingId], references: [id])
+  bid             Bid?                 @relation(fields: [bidId], references: [id])
+  farmer          FarmerProfile        @relation(fields: [farmerId], references: [id])
+  buyer           BuyerProfile         @relation(fields: [buyerId], references: [id])
+  deliveryPartner DeliveryProfile?     @relation(fields: [deliveryPartnerId], references: [id])
+  checkpoints     DeliveryCheckpoint[]
+  reviews         Review[]
+  dispute         Dispute?
+
+  @@map("orders")
+}
+
+// ─── Delivery Checkpoints ───────────────────────────────
+
+model DeliveryCheckpoint {
+  id        String         @id @default(uuid())
+  orderId   String
+  type      String         // "PICKUP", "DELIVERY"
+  photoUrl  String
+  condition String         // "good", "damaged", "acceptable"
+  notes     String?
+  latitude  Float?
+  longitude Float?
+  timestamp DateTime       @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("delivery_checkpoints")
+}
+
+// ─── Reviews ────────────────────────────────────────────
+
+model Review {
+  id         String   @id @default(uuid())
+  orderId    String
+  reviewerId String
+  revieweeId String
+  rating     Int      // 1–5
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  reviewer User  @relation("ReviewsGiven", fields: [reviewerId], references: [id])
+  reviewee User  @relation("ReviewsReceived", fields: [revieweeId], references: [id])
+
+  @@unique([orderId, reviewerId]) // One review per person per order
+  @@map("reviews")
+}
+
+// ─── Trust Score Events (history log) ───────────────────
+// The rolling trust score lives on FarmerProfile/BuyerProfile.
+// This table logs every event that changed it, for audit/debugging.
+
+model TrustScoreEvent {
+  id          String   @id @default(uuid())
+  userId      String
+  eventType   String   // "review", "dispute_resolved", "cancellation", "kyc_verified"
+  scoreDelta  Float    // how much the score changed (+/-)
+  newScore    Float    // score after this event
+  referenceId String?  // orderId, disputeId, etc.
+  reason      String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("trust_score_events")
+}
+
+// ─── Disputes ───────────────────────────────────────────
+
+model Dispute {
+  id              String        @id @default(uuid())
+  orderId         String        @unique
+  raisedById      String
+  status          String        @default("OPEN") // "OPEN", "IN_REVIEW", "RESOLVED"
+  reason          String
+  description     String?
+  resolution      String?
+  adminNotes      String?
+  refundRequested Boolean       @default(false)
+  replacementRequested Boolean  @default(false)
+  resolvedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order    Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  raisedBy User  @relation("DisputesRaised", fields: [raisedById], references: [id])
+
+  @@map("disputes")
+}
+
+// ─── Notifications ──────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      String           // "BID_RECEIVED", "BID_ACCEPTED", "BID_REJECTED", "ORDER_CREATED", "ORDER_STATUS", "DELIVERY_UPDATE", "KYC_UPDATE", "DISPUTE_UPDATE", "PRICE_ALERT", "WEATHER_ALERT", "PLATFORM"
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  // data      Json?            // SQLite doesn't support Json? natively unless string
+  data      String?          // JSON string
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
