@@ -26,7 +26,7 @@ export default function DeliveryDashboard() {
   });
 
   if (isLoading) return <div style={{ padding: '24px' }}>Loading jobs...</div>;
-  if (error || !data) {
+  if (error || !data || !data.profile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="agri-card" style={{ background: '#D97706', color: 'white' }}>
@@ -58,19 +58,19 @@ export default function DeliveryDashboard() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '24px', fontWeight: 700 
         }}>
-          {profile.fullName.charAt(0)}
+          {(profile?.fullName || 'D').charAt(0)}
         </div>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: 'var(--color-primary-dark)' }}>
-            {profile.fullName}
+            {profile?.fullName || 'Delivery Partner'}
           </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
             <span style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-              {profile.vehicleType.replace('_', ' ')} • {profile.vehicleNumber}
+              {profile?.vehicleType?.replace('_', ' ')} • {profile?.vehicleNumber}
             </span>
           </div>
           <div style={{ fontSize: '14px', fontWeight: 600, color: '#D97706', marginTop: '4px' }}>
-            ⭐ {profile.avgRating.toFixed(1)} ({profile.totalDeliveries} Deliveries)
+            ⭐ {profile?.avgRating?.toFixed(1) ?? '—'} ({profile?.totalDeliveries ?? 0} Deliveries)
           </div>
         </div>
       </div>

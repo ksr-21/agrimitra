@@ -24,7 +24,7 @@ export default function FarmerDashboard() {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !data.profile) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <div className="agri-card" style={{ background: 'var(--color-primary)', color: 'white' }}>
@@ -57,19 +57,19 @@ export default function FarmerDashboard() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '24px', fontWeight: 700 
         }}>
-          {profile.fullName.charAt(0)}
+          {(profile?.fullName || 'F').charAt(0)}
         </div>
         <div>
           <h1 style={{ fontSize: '24px', fontWeight: 700, margin: 0, color: 'var(--color-primary-dark)' }}>
-            {profile.fullName}
+            {profile?.fullName || 'Farmer'}
           </h1>
           <p style={{ color: 'var(--color-text-muted)', margin: 0 }}>
-            📍 {profile.location} • {profile.landSize} {profile.landSizeUnit}
+            📍 {profile?.location || 'Your Farm'} • {profile?.landSize} {profile?.landSizeUnit}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-            <span>⭐ {profile.avgRating.toFixed(1)}</span>
+            <span>⭐ {profile?.avgRating?.toFixed(1) ?? '—'}</span>
             <span style={{ color: 'var(--color-text-muted)', fontSize: '12px' }}>
-              ({profile.totalTransactions} {t('farmer.totalTransactions')})
+              ({profile?.totalTransactions ?? 0} {t('farmer.totalTransactions')})
             </span>
           </div>
         </div>
